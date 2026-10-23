@@ -1,7 +1,7 @@
 # SourceTree Copy Path (macOS)
 
 <p align="center">
-  <img src="docs/menu.png" width="540" alt="Copy Path entry in the SourceTree bookmark context menu">
+  <img src="docs/menu.png" width="417" alt="Copy Path entry in the SourceTree bookmark context menu">
 </p>
 
 <p align="center">
