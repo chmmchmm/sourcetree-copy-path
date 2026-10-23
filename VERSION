@@ -1,0 +1,4 @@
+stcopypath-sourcetree 1.0.0
+build: 2026-10-23
+verified: SourceTree 4.2.4 and 4.2.16 on macOS 15
+arch: x86_64 arm64
