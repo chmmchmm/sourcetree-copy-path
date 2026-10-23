@@ -9,8 +9,9 @@
 
 // Localized menu titles used to locate menu anchors inside the app.
 // Kept as escapes so the source file stays pure ASCII.
-static NSString *const kLocalizedCustomActions = @"\u81ea\u5b9a\u4e49\u64cd\u4f5c"; // Custom Actions
-static NSString *const kLocalizedOpenInTerminal = @"\u5728\u7ec8\u7aef\u4e2d\u6253\u5f00"; // Open in Terminal
+static NSString *const kCustomActionsZh = @"\u81ea\u5b9a\u4e49\u64cd\u4f5c";   // Custom Actions
+static NSString *const kOpenInTerminalZh = @"\u5728\u7ec8\u7aef\u4e2d\u6253\u5f00"; // Open in Terminal
+static NSString *const kCopyPathZh = @"\u62f7\u8d1d\u8def\u5f84";              // Copy Path
 
 static NSString *const kFallbackTitle = @"Copy Path";
 static const NSInteger kMenuItemTag = 0x53544350; // 'STCP'
@@ -43,9 +44,16 @@ static const NSInteger kMenuItemTag = 0x53544350; // 'STCP'
     return shared;
 }
 
-// Menu title follows the user's first configured custom action, so a localized
-// configuration still shows a localized entry. Falls back to English.
-static NSString *STMenuItemTitle(void) {
+// The app localizes its own menus (no .lproj for Chinese), so detect the
+// language from the menu it actually built.
+static BOOL STMenuIsEnglish(NSMenu *menu) {
+    if (!menu) return YES;
+    return [menu indexOfItemWithTitle:@"Open in Terminal"] >= 0
+        && [menu indexOfItemWithTitle:kOpenInTerminalZh] < 0;
+}
+
+// Name of the first configured custom action, used to match the action dict.
+static NSString *STConfiguredActionName(void) {
     @try {
         id delegate = [NSApp delegate];
         id actions = [delegate valueForKey:@"customActions"];
@@ -56,7 +64,13 @@ static NSString *STMenuItemTitle(void) {
             }
         }
     } @catch (NSException *e) { }
-    return kFallbackTitle;
+    return nil;
+}
+
+static NSString *STDisplayTitle(NSMenu *menu) {
+    if (STMenuIsEnglish(menu)) return kFallbackTitle; // English UI → English label
+    NSString *configured = STConfiguredActionName();
+    return configured.length ? configured : kCopyPathZh;
 }
 
 // Depth-first search for the bookmark outline view inside a window.
@@ -116,7 +130,8 @@ static NSView *FindBookmarkOutlineView(NSView *root) {
     id actions = [delegate valueForKey:@"customActions"];
     if ([actions isKindOfClass:[NSArray class]]) {
         for (NSDictionary *candidate in (NSArray *)actions) {
-            if ([[candidate valueForKey:@"name"] isEqual:STMenuItemTitle()]) { action = candidate; break; }
+            NSString *wanted = STConfiguredActionName();
+            if (wanted && [[candidate valueForKey:@"name"] isEqual:wanted]) { action = candidate; break; }
         }
     }
     if (!action) return NO;
@@ -167,13 +182,13 @@ static void STSetupWindow(NSWindow *window) {
     // Drop entries an older build may have placed in the Custom Actions submenu.
     for (NSMenuItem *it in [rootMenu.itemArray copy]) {
         NSMenu *sub = it.submenu;
-        if (![sub.title isEqualToString:kLocalizedCustomActions]) continue;
+        if (![sub.title isEqualToString:kCustomActionsZh] && ![sub.title isEqualToString:@"Custom Actions"]) continue;
         for (NSMenuItem *subItem in [sub.itemArray copy]) {
             if (subItem.tag == kMenuItemTag) [sub removeItem:subItem];
         }
     }
 
-    NSString *title = STMenuItemTitle();
+    NSString *title = STDisplayTitle(rootMenu);
 
     // Keep a single entry; refresh its title if the configuration changed.
     for (NSMenuItem *it in rootMenu.itemArray) {
@@ -192,9 +207,19 @@ static void STSetupWindow(NSWindow *window) {
     item.enabled = YES;
 
     // Place it right after "Open in Terminal" so it groups with the file actions.
-    NSInteger anchor = [rootMenu indexOfItemWithTitle:kLocalizedOpenInTerminal];
+    NSArray<NSString *> *anchors = @[
+        kOpenInTerminalZh, @"Open in Terminal",
+        @"\u5728 Finder \u4e2d\u663e\u793a", @"Show in Finder"
+    ];
+    NSInteger anchor = -1;
+    for (NSString *title in anchors) {
+        NSInteger idx = [rootMenu indexOfItemWithTitle:title];
+        if (idx >= 0) { anchor = idx; break; }
+    }
     if (anchor >= 0) {
         [rootMenu insertItem:item atIndex:anchor + 1];
+    } else if (rootMenu.numberOfItems > 6) {
+        [rootMenu insertItem:item atIndex:6]; // Safe fallback: stay in the file-action group
     } else {
         [rootMenu addItem:item];
     }
