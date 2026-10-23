@@ -5,6 +5,8 @@ Clicking it puts the repository's absolute path on the clipboard — executed th
 own custom-action runner, so the usual task window pops up and disappears, just like the built-in
 custom actions.
 
+![Copy Path in the bookmark context menu](docs/menu.png)
+
 
 ## Why a patch is needed
 
