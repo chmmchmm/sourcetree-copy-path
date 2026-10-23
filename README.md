@@ -1,11 +1,24 @@
 # SourceTree Copy Path (macOS)
 
+<p align="center">
+  <img src="docs/menu.png" width="540" alt="Copy Path entry in the SourceTree bookmark context menu">
+</p>
+
+<p align="center">
+  <strong>Copy Path</strong> sits in the bookmark list context menu, right after <em>Open in Terminal</em>.<br>
+  One click copies the repository's absolute path.
+</p>
+
+<p align="center">
+  <code>macOS 13+</code>&nbsp;·&nbsp;<code>SourceTree 4.2.x</code>&nbsp;·&nbsp;<code>universal binary</code>&nbsp;·&nbsp;<code>no runtime injection</code>
+</p>
+
+---
+
 Adds a **Copy Path** item to the **bookmark list right-click menu** of SourceTree for macOS.
 Clicking it puts the repository's absolute path on the clipboard — executed through SourceTree's
 own custom-action runner, so the usual task window pops up and disappears, just like the built-in
 custom actions.
-
-![Copy Path in the bookmark context menu](docs/menu.png)
 
 
 ## Why a patch is needed
